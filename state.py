@@ -24,7 +24,7 @@ class State():
                 return i
 
 
-    def is_space(self, pos):
+    def exist_space_next_to(self, pos):
         """
         ピースのインデックスを受け取り、
         その隣にspaceが存在するか(その駒が動かせるかどうか)
@@ -32,7 +32,7 @@ class State():
         args:
             pos: int 0~8
         return:
-            exist_space_near_to_piece: Bool
+            exist_space_next_to_piece: Bool
         """
         for adjacent in self.ADJACENT_INDEX[pos]:
             if adjacent is self.space:
@@ -54,7 +54,7 @@ class State():
         """
         piece_pos = get_pos(piece)
         
-        if not self.is_space(piece_pos):
+        if not self.exist_space_next_to(piece_pos):
             return None
 
         self.board[piece_pos], self.board[self.space] = self.board[self.space], self.board[piece_pos]
