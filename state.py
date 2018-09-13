@@ -13,7 +13,6 @@ class State():
         """
         piece(そのピースに書かれている番号)を受け取り、
         そのピースの現在のインデックスを返す
-
         args:
             piece: int 1~8
         return:
@@ -58,4 +57,23 @@ class State():
             return None
 
         self.board[piece_pos], self.board[self.space] = self.board[self.space], self.board[piece_pos]
+
+    def show(self):
+        """
+        盤面を出力する
+        args:
+            None
+        return:
+            None
+        """
+        none_str = "#"
+        outputs = [self.board[:3], self.board[3:6], self.board[6:]]
+        outputs = [str(o) for o in outputs]
+        for output in outputs:
+            output = output.replace("None", none_str)
+            print(output)
+
+if __name__ == "__main__":
+    st = State([1,2,3,4,5,6,7,8,None], 9, [None for _ in range(9)])
+    st.show()
 
