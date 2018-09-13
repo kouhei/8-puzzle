@@ -24,7 +24,7 @@ class State():
                 return i
 
 
-    def isSpace(self, pos):
+    def is_space(self, pos):
         """
         ピースのインデックスを受け取り、
         その隣にspaceが存在するか(その駒が動かせるかどうか)
@@ -54,7 +54,7 @@ class State():
         """
         piece_pos = get_pos(piece)
         
-        if not self.isSpace(piece_pos):
+        if not self.is_space(piece_pos):
             return None
 
         self.board[piece_pos], self.board[self.space] = self.board[self.space], self.board[piece_pos]
