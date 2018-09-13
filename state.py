@@ -51,7 +51,7 @@ class State():
         return:
             void
         """
-        piece_pos = get_pos(piece)
+        piece_pos = self.get_pos(piece)
         
         if not self.exist_space_next_to(piece_pos):
             return None
@@ -74,6 +74,9 @@ class State():
             print(output)
 
 if __name__ == "__main__":
-    st = State([1,2,3,4,5,6,7,8,None], 9, [None for _ in range(9)])
+    st = State([1,2,3,4,5,6,7,8,None], 8, [None for _ in range(9)])
+    st.show()
+    print()
+    st.move(8)
     st.show()
 
