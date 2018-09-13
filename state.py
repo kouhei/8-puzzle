@@ -34,7 +34,10 @@ class State():
             exist_space_next_to_piece: Bool
         """
         for adjacent in self.ADJACENT_INDEX[pos]:
+            print("adj", adjacent)
+            print("space", self.space)
             if adjacent is self.space:
+                print("adj is space!!!")
                 return True
         return False
 
@@ -51,12 +54,15 @@ class State():
         return:
             void
         """
-        piece_pos = get_pos(piece)
+        piece_pos = self.get_pos(piece)
         
         if not self.exist_space_next_to(piece_pos):
+            print("space none!!")
+            print("position", piece_pos)
             return None
 
         self.board[piece_pos], self.board[self.space] = self.board[self.space], self.board[piece_pos]
+        self.space = piece_pos
 
     def show(self):
         """
@@ -74,6 +80,11 @@ class State():
             print(output)
 
 if __name__ == "__main__":
-    st = State([1,2,3,4,5,6,7,8,None], 9, [None for _ in range(9)])
+    st = State([1,2,3,4,5,6,7,8,None], 8, [None for _ in range(9)])
+    st.show()
+    print()
+    st.move(8)
+    st.show()
+    st.move(7)
     st.show()
 
