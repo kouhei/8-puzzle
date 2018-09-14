@@ -4,10 +4,16 @@ class State():
                       (2, 4, 8), (3, 7), (4, 6, 8), (5, 7)]
     #↑ 隣接ピースのインデックス
     #ADJACENT_INDEX[0] == インデックスが0のピースに隣接するピース
-    def __init__(self, board, space, prev):
+    prev = [None for _ in range(9)]#前の状態(移動前のState)
+
+    def __init__(self, board):
         self.board = board#盤面を表す一次元の配列(空白の場所はNone)
-        self.space = space#空白の位置(boardのインデックス)
-        self.prev = prev#前の状態(移動前のState)
+        self.space = None#空白の位置(boardのインデックス)
+        for i, piece in enumerate(self.board):
+            if piece is None:
+                self.space = i
+        if self.space is None:
+            raise Exception("boardにNoneが含まれていません")
 
     def get_pos(self, piece):
         """
@@ -34,10 +40,10 @@ class State():
             exist_space_next_to_piece: Bool
         """
         for adjacent in self.ADJACENT_INDEX[pos]:
-            print("adj", adjacent)
-            print("space", self.space)
+            #print("adj", adjacent)
+            #print("space", self.space)
             if adjacent is self.space:
-                print("adj is space!!!")
+                #print("adj is space!!!")
                 return True
         return False
 
@@ -55,10 +61,11 @@ class State():
             void
         """
         piece_pos = self.get_pos(piece)
+        self.prev = self.board
         
         if not self.exist_space_next_to(piece_pos):
-            print("space none!!")
-            print("position", piece_pos)
+            #print("space none!!")
+            #print("position", piece_pos)
             return None
 
         self.board[piece_pos], self.board[self.space] = self.board[self.space], self.board[piece_pos]
@@ -78,11 +85,11 @@ class State():
         for output in outputs:
             output = output.replace("None", none_str)
             print(output)
+        print()
 
 if __name__ == "__main__":
-    st = State([1,2,3,4,5,6,7,8,None], 8, [None for _ in range(9)])
+    st = State([1,2,3,4,5,6,7,8,None])
     st.show()
-    print()
     st.move(8)
     st.show()
     st.move(7)
