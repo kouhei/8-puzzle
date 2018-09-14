@@ -34,18 +34,25 @@ def play():
     puzzle.show()
     while(not is_done):
         try:
-            piece = int(input("動かしたい駒を入力してください: "))
-            if not 0 < piece < 9:
+            #piece = int(input("動かしたい駒を入力してください: "))
+            directs = {"w":"up", "s":"down", "a":"left", "d":"right"}
+            direct_key = input("動かしたい方向を入力してください")
+
+            #if not 0 < piece < 9:
+            if not direct_key in directs:
                 raise ValueError()
         except ValueError as e:
-            print("[ERROR]駒は1~8の整数で入力してください")
+            #print("[ERROR]駒は1~8の整数で入力してください")
+            print("[ERROR]方向を入力してください")
             continue
-        puzzle.move(piece)
+
+        direct = directs[direct_key]
+        #puzzle.move_by_piece(piece)
+        puzzle.move_by_direction(direct)
         puzzle.show()
-        
+
         if puzzle.board == [1,2,3,4,5,6,7,8,None]:
             is_done = True
-
 
 
 if __name__ == '__main__':

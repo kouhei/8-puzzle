@@ -48,9 +48,9 @@ class State():
         return False
 
 
-    def move(self, piece):
+    def move_by_piece(self, piece):
         """
-        pieceを動かす
+        pieceを指定してそのpieceを動かす
 
         動かせるかどうかの確認:
             そのピースの隣にspaceがあるか
@@ -58,7 +58,7 @@ class State():
         args:
             piece: int 1~8
         return:
-            void
+            void or None
         """
         piece_pos = self.get_pos(piece)
         self.prev = self.board
@@ -66,6 +66,26 @@ class State():
         if not self.exist_space_next_to(piece_pos):
             #print("space none!!")
             #print("position", piece_pos)
+            return None
+
+        self.board[piece_pos], self.board[self.space] = self.board[self.space], self.board[piece_pos]
+        self.space = piece_pos
+
+    def move_by_direction(self, dire):
+        """
+        方向を指定して、spaceから見てその方向の反対側のピースと場所を交換する
+        args:
+            dire: str ["up", "down", "right", left]
+        return:
+            void or None
+        """
+        dires = {"up":-3, "down":3, "right":1, "left":-1}
+        if not dire in dires:
+            return None
+
+        #reverce_dires_int = dires[dire] * -1
+        piece_pos = self.space + dires[dire]
+        if (not 0 <= piece_pos < 9) or (not piece_pos in self.ADJACENT_INDEX[self.space]):
             return None
 
         self.board[piece_pos], self.board[self.space] = self.board[self.space], self.board[piece_pos]
@@ -90,8 +110,10 @@ class State():
 if __name__ == "__main__":
     st = State([1,2,3,4,5,6,7,8,None])
     st.show()
-    st.move(8)
+    #st.move_by_piece(8)
+    st.move_by_direction("right")
     st.show()
-    st.move(7)
+    #st.move_by_piece(7)
+    st.move_by_direction("right")
     st.show()
 
