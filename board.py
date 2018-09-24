@@ -6,8 +6,6 @@ from copy import deepcopy
 ADJACENT_INDEX = [(1, 3), (0, 2, 4), (1, 5), (0, 4, 6), (1, 3, 5, 7),
                   (2, 4, 8), (3, 7), (4, 6, 8), (5, 7)]
 
-board = []
-
 def replace(li, index, index2):
     """
     リスト上で置換を行う
@@ -109,6 +107,7 @@ def play():
 def bfs(board=None):
     """
     幅優先探索の実装
+    経路もわかるように前の状態の情報を持たせる
     """
     
     q = queue.Queue()
@@ -116,28 +115,34 @@ def bfs(board=None):
     cnt = 0
     goal = [e for e in range(1,9)]
     goal.append(None)
-    goal = goal
     if board is None:
-        board = shuffle(goal)
-    show_pazzle(board)
+        board = {"board":shuffle(goal), "prev":None}
+    show_pazzle(board["board"])
     q.put(board)
-    while True:
+
+    while not q.empty():
         cnt += 1
-        #print(cnt)
-        board = q.get()
-        #show_pazzle(board)
-        print("\r",cnt,board, end="")
+        if cnt > 181440:
+            print("can not find")
+            break
+        board_dic = q.get()
+        board = board_dic["board"]
+        print("\r", cnt, board, end="")
         space_index = get_space_index(board)
         if board == goal:
             print("\nend")
             print(board)
             print("cnt:",cnt)
+            show_route(board_dic)
             break
         checked.append(str(board))
         adjacents = ADJACENT_INDEX[space_index]
         for adjacent in adjacents:
-            board_next = replace(board, space_index, adjacent)
-            if not str(board_next) in checked:
+            board_next = {"board":replace(board, space_index, adjacent),"prev":board_dic}
+
+            if board_dic["prev"] is not None and board_next["board"] == board_dic["prev"]["board"]:
+                continue
+            if not str(board_next["board"]) in checked:
                 q.put(board_next)
 
 
@@ -147,8 +152,9 @@ if __name__ == '__main__':
     #bfs([1,None,2,4,5,3,7,8,6])
 
     start = time.time()
-    #bfs([None,4,6,5,1,2,7,8,3])
+    #bfs({"board":[None,4,6,5,1,2,7,8,3],"prev":None})
     #bfs([7,1,6,3,4,8,None,2,5])
-    bfs([1,2,3,4,6,5,7,8,None])
+    #bfs({"board":[1,2,3,4,6,5,7,8,None],"prev":None})
+    bfs()
     e_time = time.time() - start
     print ("e_time:{0}".format(e_time) + "[s]")
