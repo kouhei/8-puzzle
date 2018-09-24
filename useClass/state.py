@@ -4,16 +4,17 @@ class State():
                       (2, 4, 8), (3, 7), (4, 6, 8), (5, 7)]
     #↑ 隣接ピースのインデックス
     #ADJACENT_INDEX[0] == インデックスが0のピースに隣接するピース
-    prev = [None for _ in range(9)]#前の状態(移動前のState)
 
     def __init__(self, board):
         self.board = board#盤面を表す一次元の配列(空白の場所はNone)
-        self.space = None#空白の位置(boardのインデックス)
-        for i, piece in enumerate(self.board):
-            if piece is None:
-                self.space = i
-        if self.space is None:
-            raise Exception("boardにNoneが含まれていません")
+        self.space = self.board.index(None)
+        self.prev = None#前の状態(移動前のState)
+
+    def __eq__(self, other):
+        return self.board == other.board
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def get_pos(self, piece):
         """
@@ -47,10 +48,16 @@ class State():
                 return True
         return False
 
-
-    def move(self, piece):
+    def move(self, piece_pos):
         """
-        pieceを動かす
+        """
+        self.board[piece_pos], self.board[self.space] = self.board[self.space], self.board[piece_pos]
+        self.space = piece_pos
+
+
+    def move_by_piece(self, piece):
+        """
+        pieceを指定してそのpieceを動かす
 
         動かせるかどうかの確認:
             そのピースの隣にspaceがあるか
@@ -58,7 +65,7 @@ class State():
         args:
             piece: int 1~8
         return:
-            void
+            void or None
         """
         piece_pos = self.get_pos(piece)
         self.prev = self.board
@@ -67,9 +74,25 @@ class State():
             #print("space none!!")
             #print("position", piece_pos)
             return None
+        move(piece_pos)
 
-        self.board[piece_pos], self.board[self.space] = self.board[self.space], self.board[piece_pos]
-        self.space = piece_pos
+    def move_by_direction(self, dire):
+        """
+        方向を指定して、spaceから見てその方向のピースと場所を交換する
+        args:
+            dire: str ["up", "down", "right", left]
+        return:
+            void or None
+        """
+        dires = {"up":-3, "down":3, "right":1, "left":-1}
+        if not dire in dires:
+            return None
+
+        piece_pos = self.space + dires[dire]
+        if (not 0 <= piece_pos < 9) or (not piece_pos in self.ADJACENT_INDEX[self.space]):
+            return None
+        move(piece_pos)
+
 
     def show(self):
         """
@@ -90,8 +113,10 @@ class State():
 if __name__ == "__main__":
     st = State([1,2,3,4,5,6,7,8,None])
     st.show()
-    st.move(8)
+    #st.move_by_piece(8)
+    st.move_by_direction("left")
     st.show()
-    st.move(7)
+    #st.move_by_piece(7)
+    st.move_by_direction("left")
     st.show()
 
