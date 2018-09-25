@@ -1,5 +1,6 @@
 import time
 import queue
+import heapq
 import random
 from copy import deepcopy
 
@@ -111,10 +112,10 @@ def show_route(board_dic):
     board_dic = deepcopy(board_dic)
     cnt = 0
     while board_dic["prev"] is not None:
+        cnt += 1
         print(cnt)
         show_pazzle(board_dic["board"])
         print()
-        cnt += 1
         board_dic = board_dic["prev"]
 
 def bfs(board=None):
@@ -158,6 +159,65 @@ def bfs(board=None):
             if not str(board_next["board"]) in checked:
                 q.put(board_next)
 
+def index_to_2Dindex(index):
+    """
+    """
+    h = index // 3
+    w = index % 3
+    return (h,w)
+
+def get_distance(board):
+    """
+    盤面を受け取って,それぞれのピースが終了状態のインデックスからどれだけ離れているかという距離の合計値を返す
+    距離 = 絶対値(ゴールのインデックス - 現在のインデックス)
+    """
+    goal = [1,2,3,4,5,6,7,8,None]
+    sum = 0
+    for i, piece in enumerate(board):
+        h,w = index_to_2Dindex(i)
+        gh, gw = index_to_2Dindex(goal.index(piece))
+        dis = abs(h - gh) + abs(w - gw)
+        sum += dis
+    return sum
+
+def a_star_search(board=None):
+    """
+    A*アルゴリズムの実装
+        ゴールの位置からの距離の合計で優先度を決定する
+    経路もわかるように前の状態の情報を持たせる
+    """
+    hq = []
+    checked = []
+    cnt = 0
+    goal = [1,2,3,4,5,6,7,8,None]
+    if board is None:
+        board = {"board":shuffle(goal), "prev":None, "num":0}
+    show_pazzle(board["board"])
+    start_distance = get_distance(board["board"])
+    heapq.heappush(hq, (board["num"], start_distance, 0, 0, board))
+
+    while cnt < 181441:
+        cnt += 1
+        board_dic = heapq.heappop(hq)[-1]
+        board = board_dic["board"]
+        print("\r", cnt, board, end="")
+        space_index = get_space_index(board)
+        if board == goal:
+            print("\nend")
+            print(board)
+            print("cnt:",cnt)
+            show_route(board_dic)
+            break
+        checked.append(str(board))
+        adjacents = ADJACENT_INDEX[space_index]
+        for i,adjacent in enumerate(adjacents):
+            board_next = {"board":replace(board, space_index, adjacent),"prev":board_dic, "num":board_dic["num"]+1}
+
+            if board_dic["prev"] is not None and board_next["board"] == board_dic["prev"]["board"]:
+                continue
+            if not str(board_next["board"]) in checked:
+                heapq.heappush(hq, (board_next["num"]+get_distance(board_next["board"]), cnt, i, board_next))
+    print("can not find")
 
 
 if __name__ == '__main__':
@@ -166,8 +226,14 @@ if __name__ == '__main__':
 
     start = time.time()
     #bfs({"board":[None,4,6,5,1,2,7,8,3],"prev":None})
-    #bfs([7,1,6,3,4,8,None,2,5])
+    #bfs({"board":[7,1,6,3,4,8,None,2,5], "prev":None})
     #bfs({"board":[1,2,3,4,6,5,7,8,None],"prev":None})
-    bfs()
+    #bfs()
+    #a_star_search({"board":[None,4,6,5,1,2,7,8,3],"prev":None, "num":0})
+    #a_star_search({"board":[7,1,6,3,4,8,None,2,5], "prev":None, "num":0})
+    #a_star_search({"board":[8,6,7,2,5,4,3,None,1], "prev":None, "num":0})
+    #a_star_search({"board":[6,4,7,8,5,None,3,2,1],"prev":None,"num":0})
+    a_star_search()
+
     e_time = time.time() - start
     print ("e_time:{0}".format(e_time) + "[s]")
