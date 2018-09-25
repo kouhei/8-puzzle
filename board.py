@@ -104,6 +104,19 @@ def play():
             print("cnt:", cnt)
             break
 
+def show_route(board_dic):
+    """
+    goalまでたどり着いた盤面を逆にたどっていって、そこまでの経路を表示する
+    """
+    board_dic = deepcopy(board_dic)
+    cnt = 0
+    while board_dic["prev"] is not None:
+        print(cnt)
+        show_pazzle(board_dic["board"])
+        print()
+        cnt += 1
+        board_dic = board_dic["prev"]
+
 def bfs(board=None):
     """
     幅優先探索の実装
