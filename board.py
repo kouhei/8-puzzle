@@ -14,6 +14,7 @@ def replace(li, index, index2):
     li = deepcopy(li)
     li[index], li[index2] = li[index2], li[index]
     return li 
+
 def random_replace(li, space_index):
     """
     Noneをランダムな位置の要素と置換する
@@ -191,20 +192,24 @@ def a_star_search(board=None):
     cnt = 0
     goal = [1,2,3,4,5,6,7,8,None]
     if board is None:
-        board = {"board":shuffle(goal), "prev":None, "num":0}
+        board = {"board":shuffle(goal)}
+    board["prev"] = None
+    board["num"] = 0
     show_pazzle(board["board"])
     start_distance = get_distance(board["board"])
     heapq.heappush(hq, (board["num"], start_distance, 0, 0, board))
 
-    while cnt < 181441:
+    while True:
+        if cnt > 181440:
+            print("\ncan not find")
+            break
         cnt += 1
         board_dic = heapq.heappop(hq)[-1]
         board = board_dic["board"]
         print("\r", cnt, board, end="")
         space_index = get_space_index(board)
         if board == goal:
-            print("\nend")
-            print(board)
+            print("\n")
             print("cnt:",cnt)
             show_route(board_dic)
             break
@@ -217,7 +222,6 @@ def a_star_search(board=None):
                 continue
             if not str(board_next["board"]) in checked:
                 heapq.heappush(hq, (board_next["num"]+get_distance(board_next["board"]), cnt, i, board_next))
-    print("can not find")
 
 
 if __name__ == '__main__':
