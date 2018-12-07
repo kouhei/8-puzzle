@@ -1,4 +1,5 @@
 import time
+from collections import deque
 import queue
 import heapq
 import random
@@ -67,6 +68,11 @@ def shuffle(li):
             replace(li, 2, 3)
     return li
 
+def convert_pazzle(board, space_str="x"):
+    output = [str(e) for e in [board[:3], board[3:6], board[6:]]]
+    text = "\n".join(output).replace("None", space_str)
+    return text
+
 def show_pazzle(board, space_str="x"):
     """
     盤面を見やすいように
@@ -74,8 +80,7 @@ def show_pazzle(board, space_str="x"):
         Noneを別の文字に置き換えて
     表示する
     """
-    output = [str(e) for e in [board[:3], board[3:6], board[6:]]]
-    text = "\n".join(output).replace("None", space_str)
+    text = convert_pazzle(board, space_str)
     print(text)
     #return text
 
@@ -111,7 +116,7 @@ def show_route(board_dic):
     goalまでたどり着いた盤面を逆にたどっていって、そこまでの経路を表示する
     """
     board_dic = deepcopy(board_dic)
-    step = board_dic['step']
+    # step = board_dic['step']
     cnt = 0
     boards = []
 
@@ -122,12 +127,55 @@ def show_route(board_dic):
 
     boards.reverse()
     for i, board in enumerate(boards):
-        print(i+1)
+        print(i)
         show_pazzle(board)
         print()
     print("start:", boards[0])
-    print("step:", step)
-    print("depth:", i+1)
+    # print("step:", step)
+    # print("depth:", i)
+
+def show_route2(board_dic):
+    """
+    goalまでたどり着いた盤面を逆にたどっていって、そこまでの経路をステップ表示する
+    """
+    board_dic = deepcopy(board_dic)
+    step = board_dic['step']
+    cnt = 0
+    boards = []
+
+    while board_dic["prev"] is not None:
+        boards.append(board_dic["board"])
+        board_dic = board_dic["prev"]
+    boards.append(board_dic["board"])
+
+    boards.reverse()
+    while cnt < step:
+        print(cnt+1)
+        show_pazzle(boards[cnt])
+        word = ''
+        while word != 'j' and word != 'k':
+            word = input()
+            if word == 'j':
+                cnt += 1
+            elif word == 'k':
+                if cnt > 0:
+                    cnt -= 1
+            else:
+                print("\u001B[1A", end="")
+                print(" "*len(word))
+                print("\u001B[1A", end="")
+        print("\u001B[5A", end="")
+
+    # for i, board in enumerate(boards):
+    #     print(i)
+    #     show_pazzle(board)
+    #     input()
+    #     print("\u001B[5A", end="")
+
+    print()
+    print("start:", boards[0])
+    # print("step:", step)
+    print("depth:", cnt)
 
 def bfs(board=None):
     """
@@ -170,166 +218,99 @@ def bfs(board=None):
             if not str(board_next["board"]) in checked:
                 q.put(board_next)
 
-def index_to_2Dindex(index):
+def convert_2d_coord(index):
     """
+    一次元配列のインデックスからXY座標を返す
     """
-    h = index // 3
-    w = index % 3
-    return (h,w)
+    x = index // 3
+    y = index % 3
+    return x, y
+
+def convert_1d_coord(x,y):
+    """
+    convert_2d_coordの逆
+    """
+    index = x * 3 + y
+    return index
 
 def get_distance(board, goal):
     """
     盤面を受け取って,それぞれのピースが終了状態のインデックスからどれだけ離れているかという距離の合計値を返す
     距離 = 絶対値(ゴールのインデックス - 現在のインデックス)
     """
-    sum = 0
+    sum_ = 0
     for i, piece in enumerate(board):
-        h,w = index_to_2Dindex(i)
-        gh, gw = index_to_2Dindex(goal.index(piece))
+        h,w = convert_2d_coord(i)
+        gh, gw = convert_2d_coord(goal.index(piece))
         dis = abs(h - gh) + abs(w - gw)
-        sum += dis
-    return sum
+        sum_ += dis
+    return sum_
 
-# def a_star_search(board=None):
-#     """
-#     A*アルゴリズムの実装
-#         ゴールの位置からの距離の合計で優先度を決定する
-#     経路もわかるように前の状態の情報を持たせる
-#     """
-#     hq = []
-#     checked = []
-#     cnt = 0
-#     goal = [1,2,3,8,None,4,7,6,5]
-#     if board is None:
-#         board = {"board":shuffle(goal)}
-#     board["prev"] = None
-#     board["num"] = 0
-#     show_pazzle(board["board"])
-#     start_distance = get_distance(board["board"], goal)
-#     heapq.heappush(hq, (board["num"], start_distance, 0, 0, board))
-
-#     while True:
-#         cnt += 1
-#         board_dic = heapq.heappop(hq)[-1]
-#         print(board_dic)
-#         exit()
-#         board = board_dic["board"]
-#         # print("\r", cnt, board, end="")
-#         print(cnt, board)
-#         space_index = get_space_index(board)
-#         if board == goal:
-#             print("\n")
-#             print("cnt:",cnt)
-#             show_route(board_dic)
-#             break
-#         checked.append(str(board))
-#         adjacents = ADJACENT_INDEX[space_index]
-#         for i,adjacent in enumerate(adjacents):
-#             board_next = {"board":replace(board, space_index, adjacent),"prev":board_dic, "num":board_dic["num"]+1}
-
-#             if board_dic["prev"] is not None and board_next["board"] == board_dic["prev"]["board"]:
-#                 continue
-#             if not str(board_next["board"]) in checked:
-#                 heapq.heappush(hq, (board_next["num"]+get_distance(board_next["board"], goal), cnt, i, board_next))
-
-
-def a_start_search(start, goal):
+def get_adjacents(index):
     """
-    評価関数f(n) = e(n) + h(n)
-    ヒューリスティク関数h(n): 各駒の目的状態までのマンハッタン距離の総和
-    e(n): 各駒の初期状態からのマンハッタン距離の総和
-
-    また、反復深化とその深さでの展開されたノード数を表示できるようにする
-    startは一次元の配列で、空白のところにはNoneを挿入する
+    indexの2次元座標的に隣接したindexを返す
     """
-    print(start)
+    adjacents = []
+    x,y = convert_2d_coord(index)
+    if x+1 < 3:
+        adjacents.append(convert_1d_coord(x+1,y))
+    if x-1 >= 0:
+        adjacents.append(convert_1d_coord(x-1,y))
+    if y+1 < 3:
+        adjacents.append(convert_1d_coord(x,y+1))
+    if y-1 >= 0:
+        adjacents.append(convert_1d_coord(x,y-1))
+    return adjacents
 
-    z = []
-    a = [{'board':start, 'cost':0, 'prev':None}]
+def astar(start, goal):
+    """
+    """
+    queue = []
+    dist_dic = {}
+    checked = {}
     cnt = 0
 
-    while(True):
+    start_dic = {'board': start, 'cost': 0, 'prev':None, 'step':0}
+    heapq.heappush(queue, (start_dic['cost'], 0, 0, start_dic))
+    checked[str(start)] = start_dic
+    print(start)
+
+    while len(queue) > 0:
         cnt += 1
-        if a == []:
-            print("failed")
-            return None
-
-        v_dic = a.pop(0)
-        v = v_dic['board']
-        print("\r", cnt, v, end="")
-
-        if v == goal:
-            print("success")
-            v_dic['step'] = cnt
-            return v_dic
-        z.append(v_dic)
-
-        #vのすべての子節点nとコストを求める
-        space_index = get_space_index(v)
-        adjacents = ADJACENT_INDEX[space_index]
+        now_board_dic = heapq.heappop(queue)[-1]
+        now_board = now_board_dic['board']
+        print("\r", cnt, now_board, end="")
+        if now_board == goal:
+            print("end")
+            return now_board_dic
+        space_index = get_space_index(now_board_dic['board'])
+        adjacents = get_adjacents(space_index)
         for i, adjacent in enumerate(adjacents):
-            n = replace(v, space_index, adjacent)
-            n_cost = get_distance(start, n) + get_distance(n, goal)
-            n_dic = {'board':n, 'cost':n_cost, 'prev':v_dic}
+            new_board = replace(now_board, space_index, adjacent)
+            new_step = now_board_dic['step']+1
+            new_cost = new_step+get_distance(new_board, goal)
+            new_board_dic = {'board':new_board, 'cost':new_cost, 'prev':now_board_dic, 'step':new_step}
 
-            is_n_in_a = None
-            is_n_in_z = None
-            for j, ae in enumerate(a):
-                if n == ae['board']:
-                    is_n_in_a = j
-                    break
-            for j, ze in enumerate(z):
-                if n == ze['board']:
-                    is_n_in_z = j
-                    break
-
-            if is_n_in_a is not None:
-                if n_cost < a[is_n_in_a]['cost']:
-                    a[j] = n_dic
-                    # 親ポインタ表を作成
-            elif is_n_in_z is not None:
-                if n_cost < z[is_n_in_z]['cost']:
-                    a[j] = n_dic
-                    # 親ポインタ表を作成
-            else:
-                a.append(n_dic)
-                # 親ポインタ表を作成
-
-        #配列aの要素をコストの昇順に並び替え
-        a.sort(key = lambda dic: dic['cost'])
+            if str(new_board) not in checked or new_cost < checked[str(new_board)]['cost']:
+                checked[str(new_board)] = new_board_dic
+                heapq.heappush(queue, (new_cost, cnt, i, new_board_dic))
+    print(queue)
+    raise Exception("終わった！")
 
 
 
 
 if __name__ == '__main__':
     #play()
-    #bfs([1,None,2,4,5,3,7,8,6])
 
     goal = [1,2,3,8,None,4,7,6,5]
+    goal = [1, 2, 3, 4, 5, 6, 7, 8, None]
     start = shuffle(goal)
-    # start = [2, 6, 4, 8, 5, 3, None, 7, 1] #step: 904  depth: 45 e_time: 0.5804769992828369[s]
-    # start = [None, 8, 4, 1, 5, 6, 7, 3, 2] #step: 535  depth: 31 e_time: 0.2430891990661621[s]
-    # start = [2, 4, 5, 8, 6, 1, 3, 7, None] #step: 774  depth: 51 e_time: 0.43238306045532227[s]
-    # start = [5, 3, None, 8, 1, 7, 2, 6, 4] #step: 1379 depth: 57 e_time: 0.8649909496307373[s]
-    # start = [None, 1, 4, 6, 7, 8, 5, 2, 3] #step: 1973 depth: 31 e_time: 1.643401861190796[s]
-    # start = [7, 3, 2, 8, 1, None, 4, 6, 5] #step:over 40000
+    start = [8,6,7,2,5,4,3,None,1]
 
     start_time = time.time()
-    #bfs({"board":[None,4,6,5,1,2,7,8,3],"prev":None})
-    #bfs({"board":[7,1,6,3,4,8,None,2,5], "prev":None})
-    #bfs({"board":[1,2,3,4,6,5,7,8,None],"prev":None})
-    #bfs()
-    #a_star_search({"board":[None,4,6,5,1,2,7,8,3],"prev":None, "num":0})
-    #a_star_search({"board":[7,1,6,3,4,8,None,2,5], "prev":None, "num":0})
-    #a_star_search({"board":[8,6,7,2,5,4,3,None,1], "prev":None, "num":0})
-    #a_star_search({"board":[6,4,7,8,5,None,3,2,1],"prev":None,"num":0})
-    # a_star_search()
-
-    result = a_start_search(start, goal)
-
+    result = astar(start, goal)
     e_time = time.time() - start_time
-
-
-    show_route(result)
-
+    print("step:", result['step'])
+    show_route2(result)
     print ("e_time: {0}".format(e_time) + "[s]")
