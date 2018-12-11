@@ -54,8 +54,7 @@ def shuffle(li):
         li = random_replace(li, space_index)
         space_index = get_space_index(li)
 
-    shuffled_x = space_index % 3
-    shuffled_y = space_index // 3
+    shuffled_x, shuffled_y = convert_2d_coord(space_index)
     distance = abs(0 - shuffled_x) + abs(0 - shuffled_y)#初期と完成のNoneの最短距離
     if distance % 2:
         distance_is_even = False
@@ -262,6 +261,9 @@ def get_adjacents(index):
         adjacents.append(convert_1d_coord(x,y-1))
     return adjacents
 
+def calc_cost(board, func):
+    return func(board)
+
 def astar(start, goal):
     """
     """
@@ -269,6 +271,7 @@ def astar(start, goal):
     dist_dic = {}
     checked = {}
     cnt = 0
+    goal2 = replace(goal, 7, 8)
 
     start_dic = {'board': start, 'cost': 0, 'prev':None, 'step':0}
     heapq.heappush(queue, (start_dic['cost'], 0, 0, start_dic))
@@ -277,40 +280,65 @@ def astar(start, goal):
 
     while len(queue) > 0:
         cnt += 1
+        if cnt > 100000:
+            raise Exception("解なし?")
         now_board_dic = heapq.heappop(queue)[-1]
         now_board = now_board_dic['board']
         print("\r", cnt, now_board, end="")
         if now_board == goal:
-            print("end")
-            return now_board_dic
+            print("\nend")
+            return [now_board_dic, cnt]
+        elif now_board == goal2:
+            raise TypeError("解なし?")
+
         space_index = get_space_index(now_board_dic['board'])
         adjacents = get_adjacents(space_index)
         for i, adjacent in enumerate(adjacents):
             new_board = replace(now_board, space_index, adjacent)
             new_step = now_board_dic['step']+1
-            new_cost = new_step+get_distance(new_board, goal)
+            new_cost = calc_cost(new_board, lambda board: new_step+get_distance(board, goal))
             new_board_dic = {'board':new_board, 'cost':new_cost, 'prev':now_board_dic, 'step':new_step}
 
             if str(new_board) not in checked or new_cost < checked[str(new_board)]['cost']:
                 checked[str(new_board)] = new_board_dic
                 heapq.heappush(queue, (new_cost, cnt, i, new_board_dic))
-    print(queue)
-    raise Exception("終わった！")
-
-
+    print("queue", queue)
+    raise TypeError("[ERROR]: queue is empty")
 
 
 if __name__ == '__main__':
+    import random
     #play()
+    result_cnt = 0
+    non_result_cnt = 0
 
-    goal = [1,2,3,8,None,4,7,6,5]
-    goal = [1, 2, 3, 4, 5, 6, 7, 8, None]
-    start = shuffle(goal)
-    start = [8,6,7,2,5,4,3,None,1]
+    for i in range(10000):
+        goal = [1,2,3,8,None,4,7,6,5]
+        # goal = [1, 2, 3, 4, 5, 6, 7, 8, None]
+        # start = shuffle(goal)
+        start = random.sample(goal, len(goal))
 
-    start_time = time.time()
-    result = astar(start, goal)
-    e_time = time.time() - start_time
-    print("step:", result['step'])
-    show_route2(result)
-    print ("e_time: {0}".format(e_time) + "[s]")
+        start_time = time.time()
+        try:
+            result, cnt = astar(start, goal)
+        except TypeError as e:
+            print("\n解なし\n")
+            non_result_cnt += 1
+            continue
+        e_time = time.time() - start_time
+        result_cnt += 1
+
+        print("\nstep:", result['step'])
+        # show_route2(result)
+        print (f"e_time: {e_time}" + "[s]\n")
+
+        OUTPUTCSV = "./result.csv"
+        with open(OUTPUTCSV, "a") as f:
+            text = f"{str(start).replace(',', '')}, {cnt}, {result['step']}, {e_time}"
+            f.write(text+"\n")
+    print("解あり:", result_cnt, "解なし:", non_result_cnt)
+
+    # goal = [1,2,3,8,None,4,7,6,5]
+    # start = [1,2,3,8,None,4,7,5,6]
+    # result, cnt = astar(start, goal)
+    # show_route(result)
